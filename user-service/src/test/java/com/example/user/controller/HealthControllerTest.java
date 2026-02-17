@@ -1,13 +1,15 @@
 package com.example.user.controller;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class HealthControllerTest {
 
@@ -19,10 +21,20 @@ class HealthControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/user/health - 정상 응답 확인")
     void health_returnsOkStatus() throws Exception {
         mockMvc.perform(get("/api/user/health"))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("user-service is running"));
+                .andExpect(jsonPath("$.message").value("user-service is running"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("POST /api/user/health - 허용되지 않은 메서드 405 반환")
+    void health_postMethodNotAllowed() throws Exception {
+        mockMvc.perform(post("/api/user/health"))
+                .andExpect(status().isMethodNotAllowed());
     }
 }
