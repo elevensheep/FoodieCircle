@@ -1,6 +1,0 @@
-rootProject.name = 'FoodiCircle'
-
-include 'common'
-include 'user-service'
-include 'map-service'
-include 'feed-service'

@@ -37,21 +37,20 @@ FoodieCircle is a closed-loop restaurant sharing map service leveraging the Kaka
     -   **Login:** Kakao User SDK (OAuth 2.0)
 
 ### Backend (API Server)
--   **Framework:** Spring Boot 3.2.5
--   **Language:** Java 17
--   **Build Tool:** Gradle 8.8
+-   **Framework:** NestJS
+-   **Language:** TypeScript
+-   **Build Tool:** npm (or pnpm/yarn)
 -   **Architecture:** Microservices Architecture (MSA)
--   **Security:** Spring Security + JWT (JSON Web Token)
+-   **Security:** Passport + JWT (JSON Web Token)
 -   **Major Libraries:**
-    -   Spring Web
-    -   Spring Data JPA
-    -   Lombok
-    -   Validation
+    -   @nestjs/platform-express
+    -   TypeORM
+    -   class-validator & class-transformer
 
 ### Database
 -   **RDBMS:** PostgreSQL 16
 -   **Spatial Extension:** PostGIS (Location-based query optimization and distance calculation)
--   **ORM:** Hibernate (Spring Data JPA)
+-   **ORM:** TypeORM
 
 ### Message Queue
 -   **System:** Apache Kafka 3.6
@@ -59,7 +58,7 @@ FoodieCircle is a closed-loop restaurant sharing map service leveraging the Kaka
     -   Asynchronous event processing (e.g., Feed updates)
     -   Notification dispatch (Push notifications)
     -   Log aggregation & analytics data collection
--   **Client:** Spring for Apache Kafka
+-   **Client:** @nestjs/microservices (Kafka)
 
 ### Infrastructure (Self-Hosted)
 -   **Server OS:** Ubuntu 24.04
@@ -70,40 +69,39 @@ FoodieCircle is a closed-loop restaurant sharing map service leveraging the Kaka
 ## Build & Run Commands (Backend)
 
 ```bash
-./gradlew build        # Build the project
-./gradlew bootRun      # Run the application
-./gradlew test         # Run all tests
-./gradlew clean        # Clean build artifacts
+npm run build      # Build the project
+npm run start:dev  # Run the application in watch mode
+npm run test       # Run all tests
+npm run prebuild   # Clean build artifacts
 ```
 
-To run a single test class:
+To run a single test file:
 ```bash
-./gradlew test --tests "com.example.FoodiCircle.SomeTestClass"
+npm run test -- some.service.spec.ts
 ```
 
 ## Architecture Details
 
-### Multi-Module Structure (Gradle)
+### Monorepo Structure (NestJS Workspaces / npm workspaces)
 
 ```
 FoodiCircle/
-├── common/                  # Shared library (ApiResponse, DTOs, Events)
-├── user-service/            # :8081 - User identity, Kakao Login, Auth
-├── map-service/             # :8082 - Circles, Markers, Location Logic
-├── feed-service/            # :8083 - Friend activities, Timeline
-├── schedule-service/        # :8084 - Dining schedules
-├── build.gradle             # Root (subprojects common config)
-├── settings.gradle          # Module includes
+├── libs/common/             # Shared library (ApiResponse, DTOs, Events)
+├── apps/user-service/       # :8081 - User identity, Kakao Login, Auth
+├── apps/map-service/        # :8082 - Circles, Markers, Location Logic
+├── apps/feed-service/       # :8083 - Friend activities, Timeline
+├── package.json             # Root workspace config
+├── nest-cli.json            # NestJS CLI/monorepo config
 └── docker-compose.yml
 ```
 
 ### Per-Service Package Structure
 
-Each service follows the same internal layout under `com.example.{service}`:
--   `controller/`: REST API endpoints (`/api/{service}/...`)
--   `service/`: Business logic
--   `repository/`: Data access (JPA)
--   `entity/`: Database entities
+Each service follows the standard NestJS module structure under `src/`:
+-   `*.controller.ts`: REST API endpoints (`/api/{service}/...`)
+-   `*.service.ts`: Business logic
+-   `*.repository.ts`: Data access (TypeORM)
+-   `*.entity.ts`: Database entities
 -   `dto/`: Service-specific DTOs
 -   `event/`: Kafka producers/consumers
 
@@ -124,7 +122,6 @@ Each service follows the same internal layout under `com.example.{service}`:
     -   `user-service`: User & Auth
     -   `map-service`: Markers & Circles
     -   `feed-service`: Feeds & Timeline
-    -   `schedule-service`: Dining schedules
 
 ### Container Composition
 
@@ -133,7 +130,6 @@ Each service follows the same internal layout under `com.example.{service}`:
 | `user-service` | Custom | User identity, Kakao Login, Auth |
 | `map-service` | Custom | Circles, Markers, Location Logic |
 | `feed-service` | Custom | Friend activities, Timeline generation |
-| `schedule-service` | Custom | Promise & Schedule management |
 | `db` | `postgis/postgis:16-3.4` | Shared Database (Schema per service recommended) |
 | `kafka` | `bitnami/kafka:3.6` | **Event Bus** (Inter-service communication) |
 | `nginx` | `nginx:alpine` | API Gateway (routes /api/user, /api/map, etc.) |
